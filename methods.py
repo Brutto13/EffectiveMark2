@@ -22,7 +22,7 @@ from statistics import mean
 
 # print(cuda.detect())
 
-def get_time(*, precision: int=3):
+def get_time(*, precision: int = 1):
     """
     Simple decorator measuring execution time
     """
@@ -45,7 +45,7 @@ def get_avg(func):
     return _inner
 
 
-@get_time
+@get_time(precision=3)
 def cpu_test(iterations: int = int(1e9)):
     results = []
     for i in range(iterations):
@@ -55,16 +55,25 @@ def cpu_test(iterations: int = int(1e9)):
     return n
 
 
-@get_time
-def test_gpu(N: int = int(1e4), i: int=10000):
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+def cpu_multithreaded(values, iterations: int = int(1e9)):
+    results = []
+    start = time.perf_counter()
+    for i in range(iterations):
+        x = log(abs(sin(sqrt(i)-cos(i+1))-tan(i % 90)**log(i+1, 3))+1, pi)
+        results.append(x)
+    n = sum(results)
+    values.append(time.perf_counter() - start)
+
+
+@get_time(precision=3)
+def test_gpu(device: str, n: int = int(1e4), i: int = 10000):
+    device = torch.device(device)
     print(f'Using device: {device}')
     for x in range(i):
         # Create tensors on GPU
-        a = torch.randn(N, N, device=device)
-        b = torch.randn(N, N, device=device)
+        a = torch.randn(n, n, device=device)
+        b = torch.randn(n, n, device=device)
 
         # Arithmetic on GPU
         c = a + b
 
-print(test_gpu())
