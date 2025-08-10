@@ -1,4 +1,5 @@
 import argparse
+import sys
 import pyopencl as cl
 import numpy as np
 from colorama import Fore, init
@@ -48,6 +49,7 @@ __kernel void compute(__global float* data) {
 }"""
 
 # Calculate data
+
 program = cl.Program(ctx, KERNEL).build()
 process = cl.Kernel(program, 'compute')
 
@@ -59,9 +61,13 @@ N = 1024 * 1024 * 256
 global_size = (N,)
 local_size = None
 
-data_np = np.load("bin/input.npy")
-expect_np = np.load("bin/output.npy")
-# result_np = np.empty_like(data_np)
+print("Loading data...")
+try:
+    data_np = np.load("bin/input.npy")
+    expect_np = np.load("bin/output.npy")
+except:
+    data_np = np.load(f"{sys._MEIPASS}\\bin\\input.npy")
+    expect_np = np.load(f"{sys._MEIPASS}\\bin\\output.npy")
 
 print("starting test...")
 while not done:
@@ -70,15 +76,18 @@ while not done:
         mf = cl.mem_flags
         data = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data_np)
         # c = cl.Buffer(ctx, mf.WRITE_ONLY, size=result_np.nbytes)
-
+        print("Calculating...", end='\r')
         process(queue, (N,), None, data)
+        queue.finish()
 
+        print("Downloading results...", end='\r')
         result_np = np.empty_like(data_np)
         cl.enqueue_copy(queue, result_np, data)
         queue.finish()
 
-        if not np.array_equal(result_np, expect_np): print(f"Test {passes}: [{BAD}FAILED{RESET}]"); errors += 1
-        else: print(f"Test {passes}: [{GOOD}PASSED{RESET}]")
+        print("Verifying results...", end='\r')
+        if not np.array_equal(result_np, expect_np): print(f"Test {passes}: [{BAD}FAILED{RESET}]           "); errors += 1
+        else: print(f"Test {passes}: [{GOOD}PASSED{RESET}]           ")
         passes += 1
 
     except KeyboardInterrupt:

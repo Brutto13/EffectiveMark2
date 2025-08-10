@@ -16,7 +16,7 @@ ADDR = Fore.YELLOW
 RESET = Fore.RESET
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--target-device', '-d', dest='target', required=False, default=0, help='For multi-GPU setup. Select device ID')
+parser.add_argument('--target-device', '-td', dest='target', required=False, default=0, help='For multi-GPU setup. Select device ID')
 parser.add_argument('--chunk-size', dest='_chunk_size', required=False, default=512, help='Change chunk size used to fill memory')
 args = parser.parse_args()
 

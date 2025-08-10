@@ -1,10 +1,20 @@
 import moderngl
 import moderngl_window as mglw
 import numpy as np
-import pyrr
 from pyrr import Matrix44, Vector3
 import math
-import random
+
+print(r"""
++---------------------------------------------------------------------------------------------+
+|                                                     *                                       |
+|       (     (                  )                  (  `                  )      )       )    |
+|   (    )\ )  )\ )    (       ( /( (    )      (    )\))(      )  (    ( /(   ( /(    ( /(   |
+|  )\  (()/( (()/(   ))\  (   )\()))\  /((    ))\  ((_)()\  ( /(  )(   )\())  )(_))   )\())   |
+| ((_)  /(_)) /(_)) /((_) )\ (_))/((_)(_))\  /((_) (_()((_) )(_))(()\ ((_)\  ((_)    ((_)\    |
+| | __|(_) _|(_) _|(_))  ((_)| |_  (_)_)((_)(_))   |  \/  |((_)_  ((_)| |(_) |_  )   /  (_)   |
+| | _|  |  _| |  _|/ -_)/ _| |  _| | |\ V / / -_)  | |\/| |/ _` || '_|| / /   / /  _| () |    |
+| |___| |_|   |_|  \___|\__|  \__| |_| \_/  \___|  |_|  |_|\__,_||_|  |_\_\  /___|(_)\__/     |
++---------------------------------------------------------------------------------------------+""")
 
 
 def generate_torus(
@@ -60,7 +70,7 @@ def generate_torus(
 
 class TorusTest(mglw.WindowConfig):
     gl_version = (3, 3)
-    title = "EffectiveMark2 - Torus test"
+    title = "EffectiveMark2 - 3D render test"
     window_size = (1280, 720)
     resource_dir = '.'
     aspect_ratio = 16 / 9
@@ -116,7 +126,7 @@ class TorusTest(mglw.WindowConfig):
         }"""
 
         # Create geometry
-        vertices, normals, indices = generate_torus(3.0, .5, segments=1024, rings=512)
+        vertices, normals, indices = generate_torus(2.5, .5, segments=1024, rings=512)
 
         self.prog = self.ctx.program(
             vertex_shader=VShader,
@@ -133,21 +143,7 @@ class TorusTest(mglw.WindowConfig):
         radius_increment = 7.0
         base_radius = .5
 
-        # self.model_matrices = [
-        #     Matrix44.from_translation(Vector3([0.0, 0.0, 0.0])),
-        #     Matrix44.from_translation(Vector3([0.0, 0.0, 0.0]))
-        # ]
         self.model_matrices = []
-        # for i in range(self.model_count):
-        #     pos = Vector3([i * spacing, 0.0, 0.0])
-        #
-        #     scale_factor = base_radius + i * radius_increment
-        #     scale_matrix = Matrix44.from_scale([scale_factor, scale_factor, scale_factor])
-        #     # translation_matrix = Matrix44.from_translation(pos)
-        #     translation_matrix = Matrix44.identity()
-        #     # Combine scale and translation
-        #     model_matrix = translation_matrix * scale_matrix
-        #     self.model_matrices.append(model_matrix)
 
         for i in range(self.model_count):
             scale_factor = base_radius + i * radius_increment
@@ -173,13 +169,20 @@ class TorusTest(mglw.WindowConfig):
         self.vao = self.ctx.vertex_array(self.prog, vao_content, ibo)
 
         # Setup Camera
-        self.camera_pos = Vector3([.0, .0, 10.0])
+        self.camera_pos = Vector3([0.0, 0.0, 10.0])
         # self.prog['view_pos'].value = tuple(self.camera_pos)
 
     def on_render(self, time: float, frame_time: float) -> None:
         self.ctx.clear(.05, .05, .05)
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.BLEND)
+
+        if int(time) != getattr(self, "_last_time", -1):
+            # self._last_time = int(time)
+            try: print(f"FPS: {1/frame_time:.2f}", end='\r')
+            except ZeroDivisionError: print("FPS: N/A", end='\r')
+            # try: shared.fps_torus.append(1/frame_time)
+            # except ZeroDivisionError: pass
 
         proj = Matrix44.perspective_projection(45.0, self.wnd.aspect_ratio, .1, 100.0)
         view = Matrix44.look_at(
@@ -234,12 +237,12 @@ class TorusTest(mglw.WindowConfig):
         radius = 5.0
         light_pos = (
             math.sin(time)*radius,
-            math.cos(time * 2.0) * 2.0,
-            math.cos(time)*radius
+            2.0,
+            2.0
         )
 
         self.prog['light_pos'].value = light_pos
-        self.prog['light_color'].value = (1.0, 1.0, 1.0)
+        self.prog['light_color'].value = (.4, 1.0, .4)
         # self.prog['view_pos'].value = tuple(self.camera_pos)
 
         # Update buffer with new model matrices
@@ -249,5 +252,14 @@ class TorusTest(mglw.WindowConfig):
         self.vao.render(instances=self.model_count)
         # self.vao.render()
 
+
+def run_torus_test():
+    mglw.run_window_config(TorusTest)
+
+
 if __name__ == '__main__':
     mglw.run_window_config(TorusTest)
+    #    print("FPS Mean:", round(mean(shared.fps_torus), 2))
+#    print("FPS Max: ", round(max(shared.fps_torus), 2))
+#    print("FPS Min: ", round(min(shared.fps_torus), 2))
+#    input()

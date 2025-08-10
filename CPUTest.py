@@ -1,4 +1,5 @@
 import os
+import sys
 import multiprocessing as mp
 import random
 
@@ -27,8 +28,12 @@ if __name__ == '__main__':
     cores_num = os.cpu_count()
     print(f"CPU Cores: {cores_num}")
 
-    with open("bin/cpu_results.bin", "r") as file:
-        responses = file.read().split(';')
+    try:
+        with open("bin\cpu_results.bin", "r") as file:
+            responses = file.read().split(';')
+    except FileNotFoundError:
+        with open(f"{sys._MEIPASS}\\bin\\cpu_results.bin", "r") as file:
+            responses = file.read().split(';')
 
     done = False
     loop = 1

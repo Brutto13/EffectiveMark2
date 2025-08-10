@@ -1,8 +1,8 @@
 import time
-import random
-import os
-import numpy as np
-import torch
+# import random
+# import os
+# import numpy as np
+# import torch
 from math import sin, cos, tan, sqrt, log, pi
 from statistics import mean
 
@@ -55,14 +55,12 @@ def cpu_test(iterations: int = int(1e9)):
     return n
 
 
-def cpu_multithreaded(values, iterations: int = int(1e9)):
-    results = []
-    start = time.perf_counter()
-    for i in range(iterations):
-        x = log(abs(sin(sqrt(i)-cos(i+1))-tan(i % 90)**log(i+1, 3))+1, pi)
-        results.append(x)
-    n = sum(results)
-    values.append(time.perf_counter() - start)
+def cpu_multithreaded(x, values):
+    _internal = []
+    for i in range (1000):
+        _internal.append(sin(cos(tan(x % 90)-x**2)+7**(x/100))-(1/3)**(log(abs(tan((sin(x)*cos(x)) % 90))+5)))
+
+    values.append(mean(_internal))
 
 
 @get_time(precision=3)
@@ -77,3 +75,9 @@ def test_gpu(device: str, n: int = int(1e4), i: int = 10000):
         # Arithmetic on GPU
         c = a + b
 
+
+if __name__ == '__main__':
+    with open("cpu_results.bin", "x") as file:
+        for i in range(1000000):
+            file.write(str(cpu_multithreaded(i, 0))+';')
+            print(f"Iteration: {i} / 1000")
