@@ -14,6 +14,7 @@ from methods import *
 
 # Multiprocessing needs this condition
 if __name__ == '__main__':
+    mp.freeze_support()
     print(r"""
     +---------------------------------------------------------------------------------------------+
     |                                                     *                                       |
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     print(f"CPU Cores: {cores_num}")
 
     try:
-        with open("bin\cpu_results.bin", "r") as file:
+        with open(R"bin\cpu_results.bin", "r") as file:
             responses = file.read().split(';')
     except FileNotFoundError:
         with open(f"{sys._MEIPASS}\\bin\\cpu_results.bin", "r") as file:
