@@ -8,8 +8,8 @@ as CPU cores are detected. It uses CPU to calculate arithmetic operations on num
 it with precalculated results.
 
 ## RAM Test
-**WARNING: This test is NOT as accurate as Memtest86** but it's good enough to test
-R/W operations on system
+**WARNING: This test is NOT as accurate as Memtest86, **but it's good enough to test
+R/W operations on system**
 
 ## GPU Test
 Test written in OpenCL, so it **should** work on both AMD and NVIDIA cards.
@@ -31,3 +31,18 @@ will use more chunks but can use more VRAM
 or takes too long reducing this value can help
 - `--free-space`: How much memory should be unallocated. If you are hitting `OOMError` raising this
 value can help.
+
+## Render Test
+Uses GPU to render rotating torus with moving light which uses
+a lot of calculations. this is very aggressive GPU test which allows to see
+rendering artifacts.
+
+## Summary
+These test should be enough if you want to quickly check for most common
+errors caused by overclocking or degradation of components. It's definitely
+**NOT** enough to have 100% confidence of stable system (yet).
+This test does **NOT** provide GPU temperature / power consumption
+monitoring. This monitoring is written in "SysView" project.
+Practical information: ANY failed test means system instability even occasional
+ones. One test is **NOT** enough to judge system stability, but if GPU passes around 200-300
+test loops without any errors it's strong sign that everything is OK.
