@@ -3,6 +3,7 @@ import moderngl_window as mglw
 import numpy as np
 from pyrr import Matrix44, Vector3
 import math
+import random
 
 print(r"""
 +---------------------------------------------------------------------------------------------+
@@ -71,7 +72,7 @@ def generate_torus(
 class TorusTest(mglw.WindowConfig):
     gl_version = (3, 3)
     title = "EffectiveMark2 - 3D render test"
-    window_size = (1280, 720)
+    window_size = (1280*2, 720*2)
     resource_dir = '.'
     aspect_ratio = 16 / 9
 
@@ -116,17 +117,17 @@ class TorusTest(mglw.WindowConfig):
         uniform vec3 view_pos;
         
         void main() {
-            vec3 color = vec3(0.2, 0.5, 1.0); // base color
+            vec3 color = vec3(0.0, .3, 1.0); // base color
             vec3 norm = normalize(normal);
             vec3 light_dir = normalize(light_pos - frag_pos);
             float diff = max(dot(norm, light_dir), 0.0);
         
             vec3 diffuse = diff * light_color;
-            frag_color = vec4(diffuse * color, 1.0);
+            frag_color = vec4(diffuse * color * 2, 1.0);
         }"""
 
         # Create geometry
-        vertices, normals, indices = generate_torus(2.5, .5, segments=1024, rings=512)
+        vertices, normals, indices = generate_torus(3.0, .5, segments=512, rings=256)
 
         self.prog = self.ctx.program(
             vertex_shader=VShader,
@@ -138,7 +139,7 @@ class TorusTest(mglw.WindowConfig):
         ibo = self.ctx.buffer(indices.tobytes())
 
         # number of toruses
-        self.model_count = 500
+        self.model_count = 600
         spacing = 4.0
         radius_increment = 7.0
         base_radius = .5
@@ -170,7 +171,6 @@ class TorusTest(mglw.WindowConfig):
 
         # Setup Camera
         self.camera_pos = Vector3([0.0, 0.0, 10.0])
-        # self.prog['view_pos'].value = tuple(self.camera_pos)
 
     def on_render(self, time: float, frame_time: float) -> None:
         self.ctx.clear(.05, .05, .05)
@@ -192,21 +192,34 @@ class TorusTest(mglw.WindowConfig):
         )
 
         # if random.randint(0, 1) == 0:
+
+        for i, base_matrix in enumerate(self.model_matrices):
+            idx = i % self.model_count
+            multiplier1 = math.pi / 2
+            multiplier2 = math.e / 2
+            multiplier3 = math.tau / 2
+            if idx == 0:
+                # rotation = Matrix44.from_x_rotation(math.sin(time) * multiplier1)  # rotate around Y axis
+                rotation = Matrix44.from_x_rotation(time * multiplier1)
+
+            elif idx == 1:
+                rotation = Matrix44.from_y_rotation(time * multiplier2)  # rotate around Y axis
+
+            elif idx == 2:
+                rotation = Matrix44.from_z_rotation(time * multiplier3)  # rotate around Y axis
+
+            translation_vec = base_matrix[3, :3]
+            translation = Matrix44.from_translation(translation_vec)
+            self.model_matrices[i] = translation * rotation
+
+        # else:
         #     for i, base_matrix in enumerate(self.model_matrices):
-        #         rotation = Matrix44.from_x_rotation(time)  # rotate around Y axis
+        #         rotation = Matrix44.from_y_rotation(time)  # rotate around Y axis
         #         translation_vec = base_matrix[3, :3]
         #         translation = Matrix44.from_translation(translation_vec)
         #         # translation = Matrix44.from_translation(base_matrix.translation)
         #
         #         self.model_matrices[i] = translation * rotation
-        # else:
-        for i, base_matrix in enumerate(self.model_matrices):
-            rotation = Matrix44.from_y_rotation(time)  # rotate around Y axis
-            translation_vec = base_matrix[3, :3]
-            translation = Matrix44.from_translation(translation_vec)
-            # translation = Matrix44.from_translation(base_matrix.translation)
-
-            self.model_matrices[i] = translation * rotation
 
 
 
@@ -236,13 +249,13 @@ class TorusTest(mglw.WindowConfig):
 
         radius = 5.0
         light_pos = (
-            math.sin(time)*radius,
-            2.0,
-            2.0
+            math.sin(time*math.pi),
+            math.cos(time/2),
+            abs(math.tan(time % 90))*10
         )
 
         self.prog['light_pos'].value = light_pos
-        self.prog['light_color'].value = (.4, 1.0, .4)
+        self.prog['light_color'].value = (0.2, .5, 0.25)
         # self.prog['view_pos'].value = tuple(self.camera_pos)
 
         # Update buffer with new model matrices

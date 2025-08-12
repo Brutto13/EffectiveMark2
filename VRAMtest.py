@@ -151,7 +151,7 @@ while not done:
 
             if not error: print(f"Test {loop+1} ({ADDR}{addr_str}{RESET}): [{GOOD}PASSED{RESET}]             ")
             else: print(f"Test {loop+1} ({ADDR}{addr_str}{RESET}) [{BAD}FAILED{RESET}]                ")
-            time.sleep(2)
+            time.sleep(5)
 
         loop += 1
 

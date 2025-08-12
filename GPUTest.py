@@ -75,7 +75,6 @@ while not done:
         # Allocate memory
         mf = cl.mem_flags
         data = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data_np)
-        # c = cl.Buffer(ctx, mf.WRITE_ONLY, size=result_np.nbytes)
         print("Calculating...", end='\r')
         process(queue, (N,), None, data)
         queue.finish()
