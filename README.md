@@ -22,15 +22,17 @@ overclocking problems. This test accepts following arguments from command line:
 This test works similar to RAM test. Writes known pattern. then loads GPU with calculations that
 do not use VRAM. After computations are complete it reads VRAM pattern and check if it's still the same.
 Following arguments are accepted:
-- `--target-device`: Tested device's ID (multi-gpu setup ONLY)
-- `--chunk-size`: Test uses "chunks" to control and fill VRAM. Smaller number will take more time to fill
+- `--target-device`, `-td`: Tested device's ID (multi-gpu setup ONLY)
+- `--chunk-size`, `-cs`: Test uses "chunks" to control and fill VRAM. Smaller number will take more time to fill
 but can be more precise while calculating number of chunks. E.g. Assuming 6GB VRAM and chunk size is set to 512.
 Quick calculations shows, that using 10 chunks will fill 5120MB VRAM. Setting this to 256 or 128
 will use more chunks but can use more VRAM
-- `--load-loops`: This parameter defines how many times GPU will be "asked" to calculate some data. If test freezes 
+- `--load-loops`, `-ll`: This parameter defines how many times GPU will be "asked" to calculate some data. If test freezes 
 or takes too long reducing this value can help
-- `--free-space`: How much memory should be unallocated. If you are hitting `OOMError` raising this
+- `--free-space`, `-fs`: How much memory should be unallocated. If you are hitting `OOMError` raising this
 value can help.
+- `--warmup-temp`, `-wt`: Temperature that must be reached by GPU before continuing, allows simulation of
+thermal edge- and worst-case scenarios.
 
 ## Render Test
 Uses GPU to render rotating torus with moving light which uses

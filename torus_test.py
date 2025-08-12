@@ -123,7 +123,7 @@ class TorusTest(mglw.WindowConfig):
             float diff = max(dot(norm, light_dir), 0.0);
         
             vec3 diffuse = diff * light_color;
-            frag_color = vec4(diffuse * color * 2, 1.0);
+            frag_color = vec4(diffuse * color, 1.0);
         }"""
 
         # Create geometry
@@ -225,29 +225,8 @@ class TorusTest(mglw.WindowConfig):
 
         self.prog['projection'].write(proj.astype('f4').tobytes())
         self.prog['view'].write(view.astype('f4').tobytes())
-        # self.prog['view_pos'].value = tuple(self.camera_pos)
-        # Dynamic lights
-        lights = [
-            (math.sin(time) * 10, 5.0, math.cos(time) * 10),
-            (math.cos(time * 1.2) * 8, math.sin(time*.5) * 8, 5),
-            (5, math.cos(time) * 5, math.sin(time * 2.0) * 5)
-        ]
 
-        colors = [
-            (1.0, 0.5, 0.3),
-            (0.3, 0.8, 1.0),
-            (1.0, 1.0, 0.8)
-        ]
-
-        # Flatten each light array
-        flat_lights = tuple([c for vec in lights for c in vec])
-        flat_colors = tuple([c for vec in colors for c in vec])
-
-        # if 'light_positions[0]' in self.prog:
-        #     self.prog['light_positions'].value = flat_lights
-        #     self.prog['light_colors'].value = flat_colors
-
-        radius = 5.0
+        # Define light
         light_pos = (
             math.sin(time*math.pi),
             math.cos(time/2),

@@ -1,7 +1,6 @@
 import random
 import time
 import GPUtil
-import sys
 import argparse
 import gc
 import numpy
@@ -19,8 +18,10 @@ RESET = Fore.RESET
 parser = argparse.ArgumentParser()
 parser.add_argument('--target-device', '-td', dest='target', required=False, default=0, help='For multi-GPU setup. Select device ID')
 parser.add_argument('--chunk-size', '-cs', dest='chunk_size', required=False, default=512, help='Change chunk size used to fill memory')
-parser.add_argument('--load-loops', '-ll', dest='loops', required=False, default=10000, help='Number of load loops')
+parser.add_argument('--load-loops', '-ll', dest='loops', required=False, default=2000, help='Number of load loops')
 parser.add_argument('--free-space', '-fs', dest='free', required=False, default=1000, help='Unallocated VRAM memory')
+parser.add_argument('--warmup-temp', '-wt', dest='t_temp', required=False, default=50, help='NVIDA only: Warm GPU to this temperature before entering temperatures')
+parser.add_argument('--aggressive-timing', '-at', dest='no_timeout', required=False, default=False, action='store_true', help='Disable timeout between tests')
 args = parser.parse_args()
 
 try: device_id = int(args.target)
@@ -46,6 +47,11 @@ try: chunk_size = int(args.chunk_size)  # [MB]
 except ValueError:
     print(F"{BAD}ValueError{RESET}: {ADDR}Invalid --chunk-size argument. Assuming default value!")
     chunk_size = 512
+
+try: target_temp = float(args.t_temp)
+except ValueError:
+    print(F"{BAD}ValueError{RESET}: {ADDR}Invalid --warmup-temp argument. Assuming default value!")
+    target_temp = 50
 
 chunk_size_bytes = chunk_size*(1024**2)  # [B]
 num_chunks = int(target_vram/chunk_size)
@@ -84,7 +90,21 @@ __kernel void compute(__global float* data) {
     }
 
     data[i] = x;
-}"""
+}
+
+__kernel void warmup(__global float* data) {
+    int i = get_global_id(0);
+    float x = data[i];
+
+    // Simulate heavy math
+    for (int j = 0; j < 1000; ++j) {
+        x = sin(cos(x)) * cos(sin(x)) + sqrt(fabs(x)) + log(x + 1.0f);
+    }
+
+    data[i] = x;
+}
+
+"""
 
 N = 1024 * 1024 * 32
 global_size = (N,)
@@ -94,6 +114,7 @@ gpu_num_buf = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR
 
 program = cl.Program(ctx, KERNEL).build()
 process = cl.Kernel(program, 'compute')
+warmup  = cl.Kernel(program, 'warmup')
 
 data_np = np.random.rand(N)
 
@@ -104,6 +125,30 @@ print(f"Tested VRAM:   {num_chunks*chunk_size} MB")
 buffers = []
 done = False
 loop = 0
+
+# Load data
+try:
+    data_np = np.load("bin/input.npy")
+except:
+    data_np = np.load(f"{sys._MEIPASS}\\bin\\input.npy")
+
+
+# Warmup
+warmed = False
+mf = cl.mem_flags
+data = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data_np)
+while not warmed:
+    current_temp = GPUtil.getGPUs()[device_id].temperature
+    warmup(queue, (1024 * 1024 * 256,), None, data)
+    print(f"Warming up GPU: {current_temp} *C / {target_temp} *C", end='\r')
+    queue.finish()
+
+    if current_temp >= target_temp:
+        warmed = True
+        # Clear previous labels
+        print("                                   ", end='\r')
+
+# VRAM test
 while not done:
     error = False
 
@@ -119,12 +164,11 @@ while not done:
             cl.enqueue_copy(queue, buf, pattern[:], is_blocking=True)
             buffers.append(buf)
             print(f"Status: Chunk {i+1} / {num_chunks} allocated", end='\r')
-        # print(f"Chunk {num_chunks} / {num_chunks} allocated!")
 
         for n in range(loads):
             process(queue, (98360,), None, gpu_num_buf)
             print(f"Generating GPU Load ({n+1} / {loads})", end='\r')
-        queue.finish()
+            queue.finish()
 
         print("Reading from VRAM...           ", end='\r')
         for i, buf in enumerate(buffers):
@@ -151,7 +195,7 @@ while not done:
 
             if not error: print(f"Test {loop+1} ({ADDR}{addr_str}{RESET}): [{GOOD}PASSED{RESET}]             ")
             else: print(f"Test {loop+1} ({ADDR}{addr_str}{RESET}) [{BAD}FAILED{RESET}]                ")
-            time.sleep(5)
+            if not args.no_timeout: time.sleep(5)
 
         loop += 1
 
