@@ -1,4 +1,5 @@
 import random
+import sys
 import time
 import GPUtil
 import argparse
@@ -15,7 +16,12 @@ BAD = Fore.RED
 ADDR = Fore.YELLOW
 RESET = Fore.RESET
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    prog="EffectiveMark2 - Stability testing toolkit",
+    description="VRAM testing application",
+    allow_abbrev=False,
+
+)
 parser.add_argument('--target-device', '-td', dest='target', required=False, default=0, help='For multi-GPU setup. Select device ID')
 parser.add_argument('--chunk-size', '-cs', dest='chunk_size', required=False, default=512, help='Change chunk size used to fill memory')
 parser.add_argument('--load-loops', '-ll', dest='loops', required=False, default=2000, help='Number of load loops')

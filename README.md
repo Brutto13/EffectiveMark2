@@ -2,23 +2,23 @@
 This software is a toolkit designed especially for checking stability of overclocked components.
 This includes CPU, RAM, GPU and VRAM tests. All have built-in error detection.
 
-## CPU Test
+## CPU Test (CPUTest.py)
 This test takes no command-line arguments. Classic CPU test launches as many processes
 as CPU cores are detected. It uses CPU to calculate arithmetic operations on number and compares
 it with precalculated results.
 
-## RAM Test
+## RAM Test (RAMTst.py)
 **WARNING: This test is NOT as accurate as Memtest86, **but it's good enough to test
 R/W operations on system**
 
-## GPU Test
+## GPU Test (GPUTest.py)
 Test written in OpenCL, so it **should** work on both AMD and NVIDIA cards.
 Loads GPU with arithmetic operations which uses low amounts of VRAM which is useful when debugging
 overclocking problems. This test accepts following arguments from command line:
 - `--target-device`, `-td`: For multi-gpu setup ONLY. Select which card should be tested.
 **This argument doesn't accept names like "NVIDIA GTX 1080 Ti** It accepts IDs like "0" (means GPU-0)
 
-## VRAM test
+## VRAM test (VRAMTest.py)
 This test works similar to RAM test. Writes known pattern. then loads GPU with calculations that
 do not use VRAM. After computations are complete it reads VRAM pattern and check if it's still the same.
 Following arguments are accepted:
@@ -34,10 +34,14 @@ value can help.
 - `--warmup-temp`, `-wt`: Temperature that must be reached by GPU before continuing, allows simulation of
 thermal edge- and worst-case scenarios.
 
-## Render Test
+## Render Test (torus_test.py)
 Uses GPU to render rotating torus with moving light which uses
 a lot of calculations. this is very aggressive GPU test which allows to see
 rendering artifacts.
+
+## Thermal Test (GPUTempTest.py)
+This test measures how fast the GPU heats up. It will stop on 85*C or other temperature is specified
+in args
 
 ## Summary
 These test should be enough if you want to quickly check for most common

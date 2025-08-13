@@ -169,25 +169,25 @@ class TorusTest(mglw.WindowConfig):
 
         self.vao = self.ctx.vertex_array(self.prog, vao_content, ibo)
 
-        # Setup Camera
-        self.camera_pos = Vector3([0.0, 0.0, 10.0])
+
 
     def on_render(self, time: float, frame_time: float) -> None:
+        # Setup Camera
+        self.camera_pos = Vector3([10*math.cos(time), 0, 10.0])
+
         self.ctx.clear(.05, .05, .05)
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.BLEND)
 
+        # Print FPS
         if int(time) != getattr(self, "_last_time", -1):
-            # self._last_time = int(time)
             try: print(f"FPS: {1/frame_time:.2f}", end='\r')
             except ZeroDivisionError: print("FPS: N/A", end='\r')
-            # try: shared.fps_torus.append(1/frame_time)
-            # except ZeroDivisionError: pass
 
         proj = Matrix44.perspective_projection(45.0, self.wnd.aspect_ratio, .1, 100.0)
         view = Matrix44.look_at(
             self.camera_pos,
-            (.0, .0, .0),
+            (0, 0, 0),
             (.0, 1.0, .0)
         )
 
@@ -196,32 +196,19 @@ class TorusTest(mglw.WindowConfig):
         for i, base_matrix in enumerate(self.model_matrices):
             idx = i % self.model_count
             multiplier1 = math.pi / 2
-            multiplier2 = math.e / 2
-            multiplier3 = math.tau / 2
+            multiplier2 = math.pi / 3
+            multiplier3 = math.pi / 3
+            # multiplier2 = multiplier3 = 0
             if idx == 0:
-                # rotation = Matrix44.from_x_rotation(math.sin(time) * multiplier1)  # rotate around Y axis
-                rotation = Matrix44.from_x_rotation(time * multiplier1)
-
+                rotation = Matrix44.from_x_rotation(math.sin(time) * multiplier1)  # rotate around Y axis
             elif idx == 1:
-                rotation = Matrix44.from_y_rotation(time * multiplier2)  # rotate around Y axis
-
+                rotation = Matrix44.from_y_rotation(math.sin(time) * multiplier2)  # rotate around Y axis
             elif idx == 2:
-                rotation = Matrix44.from_z_rotation(time * multiplier3)  # rotate around Y axis
+                rotation = Matrix44.from_z_rotation(math.sin(time) * multiplier3)  # rotate around Y axis
 
             translation_vec = base_matrix[3, :3]
             translation = Matrix44.from_translation(translation_vec)
             self.model_matrices[i] = translation * rotation
-
-        # else:
-        #     for i, base_matrix in enumerate(self.model_matrices):
-        #         rotation = Matrix44.from_y_rotation(time)  # rotate around Y axis
-        #         translation_vec = base_matrix[3, :3]
-        #         translation = Matrix44.from_translation(translation_vec)
-        #         # translation = Matrix44.from_translation(base_matrix.translation)
-        #
-        #         self.model_matrices[i] = translation * rotation
-
-
 
         self.prog['projection'].write(proj.astype('f4').tobytes())
         self.prog['view'].write(view.astype('f4').tobytes())
@@ -233,8 +220,10 @@ class TorusTest(mglw.WindowConfig):
             abs(math.tan(time % 90))*10
         )
 
+        # light_pos = (0, 0, 10)
+
         self.prog['light_pos'].value = light_pos
-        self.prog['light_color'].value = (0.2, .5, 0.25)
+        self.prog['light_color'].value = (0.4, 1., 0.5)
         # self.prog['view_pos'].value = tuple(self.camera_pos)
 
         # Update buffer with new model matrices
@@ -251,7 +240,3 @@ def run_torus_test():
 
 if __name__ == '__main__':
     mglw.run_window_config(TorusTest)
-    #    print("FPS Mean:", round(mean(shared.fps_torus), 2))
-#    print("FPS Max: ", round(max(shared.fps_torus), 2))
-#    print("FPS Min: ", round(min(shared.fps_torus), 2))
-#    input()
